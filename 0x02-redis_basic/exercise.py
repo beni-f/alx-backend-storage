@@ -18,7 +18,7 @@ class Cache:
             self._redis.incr(method.__qualname__)
             return method(self, *args, **kwargs)
         return wrapper
-    
+
     def call_history(method: Callable) -> Callable:
         @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
@@ -39,21 +39,21 @@ class Cache:
         key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
-    
-    def get(self, key: str, fn: Optional[Callable[[bytes], Union[str, int, float]]] = None) -> Union[str, int, float]:
+
+    def get(self, key: str, fn: Optional[Callable]) -> Union[str, int, float]:
         data = self._redis.get(key)
         if data is None:
             return None
         if fn is not None:
             return fn(data)
         return data
-    
-    def get_str(self, key:str) -> Optional[str]:
+
+    def get_str(self, key: str) -> Optional[str]:
         return self.get(key, lambda x: x.decode('utf-8'))
-    
-    def get_int(self, key:int) -> Optional[int]:
+
+    def get_int(self, key: int) -> Optional[int]:
         return self.get(key, lambda x: int(x))
-    
+
     def replay(self, method: Callable) -> None:
         input_key = f"{method.__qualname__}:inputs"
         output_key = f"{method.__qualname__}:outputs"
@@ -63,9 +63,7 @@ class Cache:
         inputs = self._redis.lrange(input_key, 0, -1)
         outputs = self._redis.lrange(output_key, 0, -1)
 
-
         print(f"{method.__qualname__} was called {len(inputs)} times:")
-
 
         for input_data, output_data in zip(inputs, outputs):
             input_str = input_data.decode('utf-8')
