@@ -9,10 +9,16 @@ import functools
 
 class Cache:
     def __init__(self) -> None:
+        """
+            Initialization
+        """
         self._redis = redis.Redis()
         self._redis.flushdb()
 
     def count_calls(method: Callable) -> Callable:
+        """
+            Count how many times methods of the Cache class are called.
+        """
         @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
             self._redis.incr(method.__qualname__)
@@ -20,6 +26,9 @@ class Cache:
         return wrapper
 
     def call_history(method: Callable) -> Callable:
+        """
+            Store the history of inputs and outputs for a particular function
+        """
         @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
             input_key = f"{method.__qualname__}:inputs"
@@ -49,12 +58,21 @@ class Cache:
         return data
 
     def get_str(self, key: str) -> Optional[str]:
+        """
+            Parametrize Cache.get with the correct conversion function
+        """
         return self.get(key, lambda x: x.decode('utf-8'))
 
     def get_int(self, key: int) -> Optional[int]:
+        """
+            Parametrize Cache.get with the correct conversion function
+        """
         return self.get(key, lambda x: int(x))
 
     def replay(self, method: Callable) -> None:
+        """
+            Display the history of calls of a particular function
+        """
         input_key = f"{method.__qualname__}:inputs"
         output_key = f"{method.__qualname__}:outputs"
 
