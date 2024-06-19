@@ -20,7 +20,7 @@ class Cache:
         return wrapper
     
     def call_history(method: Callable) -> Callable:
-        @functools.wrap(method)
+        @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
             input_key = f"{method.__qualname__}:inputs"
             output_key = f"{method.__qualname__}:outputs"
@@ -53,3 +53,21 @@ class Cache:
     
     def get_int(self, key:int) -> Optional[int]:
         return self.get(key, lambda x: int(x))
+    
+    def replay(self, method: Callable) -> None:
+        input_key = f"{method.__qualname__}:inputs"
+        output_key = f"{method.__qualname__}:outputs"
+
+        self = method.__self__
+
+        inputs = self._redis.lrange(input_key, 0, -1)
+        outputs = self._redis.lrange(output_key, 0, -1)
+
+
+        print(f"{method.__qualname__} was called {len(inputs)} times:")
+
+
+        for input_data, output_data in zip(inputs, outputs):
+            input_str = input_data.decode('utf-8')
+            output_str = output_data.decode('utf-8')
+            print(f"{method.__qualname__}(*{input_str}) -> {output_str}")
