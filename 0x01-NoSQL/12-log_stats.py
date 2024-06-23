@@ -14,8 +14,7 @@ def print_request_logs(nginx_collection):
     for method in methods:
         print("\tmethod {}: {}".format(method, len(list(nginx_collection.find({"method": method})))))
     result = len(list(nginx_collection.find(
-        {"method": "GET"},
-        {"path": "/status"}
+        {"method": "GET", "path": "/status"}
     )))
     print(f"{result} status check")
 
